@@ -330,6 +330,7 @@ public class Commands {
 			player.message("@whatdropsfrom <monster name>: Displays a list of drops and chances for a specified monster.");
 			player.message("@whodrops <item name>: Displays monsters that drop an item given an item name.");
 			player.message("@bosshp: Displays the remaining HP of the bosses on your map.");
+			player.message("@save: Saves your data.");
 			break;
 		case "time":
 			DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
@@ -587,6 +588,10 @@ public class Commands {
 				}
 			} 
 			break;
+		case "save":
+		player.saveToDB();
+		player.message("Saved.");
+		break;
 		case "ranks":
 			PreparedStatement ps = null;
 			ResultSet rs = null;
