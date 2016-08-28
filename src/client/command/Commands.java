@@ -309,13 +309,8 @@ public class Commands {
 
     public static boolean executePlayerCommand(MapleClient c, String[] sub, char heading) {
         MapleCharacter player = c.getPlayer();
-        int amount = Integer.parseInt(sub[1]);
-        boolean str = sub[0].equalsIgnoreCase("str");
-        boolean dex = sub[0].equalsIgnoreCase("dex");
-        boolean Int = sub[0].equalsIgnoreCase("int");
-        boolean luk = sub[0].equalsIgnoreCase("luk");
         if (heading == '!' && player.gmLevel() == 0) {
-            player.yellowMessage("You may not use !" + sub[0] + ", please try /" + sub[0]);
+            player.yellowMessage("You may not use !" + sub[0] + ", please try @" + sub[0]);
             return false;
         }
         switch (sub[0]) {
@@ -336,54 +331,20 @@ public class Commands {
                 player.message("@bosshp: Displays the remaining HP of the bosses on your map.");
                 player.message("@str/dex/int/luk [amount]: adds AP into any stat");
                 break;
+            case "dispose":
+                NPCScriptManager.getInstance().dispose(c);
+                c.announce(MaplePacketCreator.enableActions());
+                c.removeClickedNPC();
+                player.message("You've been disposed.");
+                break;
+            case "save":
+                player.saveToDB();
+                player.message("Saved.");
+                break;
             case "time":
                 DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
                 dateFormat.setTimeZone(TimeZone.getTimeZone("EST"));
                 player.yellowMessage("Asteria Server Time: " + dateFormat.format(new Date()));
-                break;
-            case "str":
-                if (((amount > 0) && (amount <= player.getRemainingAp()) && (amount <= 32763)) || ((amount < 0) && (amount >= -32763) && (Math.abs(amount) + player.getRemainingAp() <= 32767))) {
-                    if ((str) && (amount + player.getStr() <= 32767) && (amount + player.getStr() >= 4)) {
-                        player.setStr(player.getStr() + amount);
-                        player.updateSingleStat(MapleStat.STR, player.getStr());
-                        player.setRemainingAp(player.getRemainingAp() - amount);
-                        player.updateSingleStat(MapleStat.AVAILABLEAP, player.getRemainingAp());
-                        player.message("STR added.");
-                    }
-                }
-                break;
-            case "dex":
-                if (((amount > 0) && (amount <= player.getRemainingAp()) && (amount <= 32763)) || ((amount < 0) && (amount >= -32763) && (Math.abs(amount) + player.getRemainingAp() <= 32767))) {
-                    if ((dex) && (amount + player.getDex() <= 32767) && (amount + player.getDex() >= 4)) {
-                        player.setDex(player.getDex() + amount);
-                        player.updateSingleStat(MapleStat.DEX, player.getDex());
-                        player.setRemainingAp(player.getRemainingAp() - amount);
-                        player.updateSingleStat(MapleStat.AVAILABLEAP, player.getRemainingAp());
-                        player.message("DEX added.");
-                    }
-                }
-                break;
-            case "int":
-                if (((amount > 0) && (amount <= player.getRemainingAp()) && (amount <= 32763)) || ((amount < 0) && (amount >= -32763) && (Math.abs(amount) + player.getRemainingAp() <= 32767))) {
-                    if ((Int) && (amount + player.getInt() <= 32767) && (amount + player.getInt() >= 4)) {
-                        player.setInt(player.getInt() + amount);
-                        player.updateSingleStat(MapleStat.INT, player.getInt());
-                        player.setRemainingAp(player.getRemainingAp() - amount);
-                        player.updateSingleStat(MapleStat.AVAILABLEAP, player.getRemainingAp());
-                        player.message("INT added.");
-                    }
-                }
-                break;
-            case "luk":
-                if (((amount > 0) && (amount <= player.getRemainingAp()) && (amount <= 32763)) || ((amount < 0) && (amount >= -32763) && (Math.abs(amount) + player.getRemainingAp() <= 32767))) {
-                    if ((luk) && (amount + player.getLuk() <= 32767) && (amount + player.getLuk() >= 4)) {
-                        player.setLuk(player.getLuk() + amount);
-                        player.updateSingleStat(MapleStat.LUK, player.getLuk());
-                        player.setRemainingAp(player.getRemainingAp() - amount);
-                        player.updateSingleStat(MapleStat.AVAILABLEAP, player.getRemainingAp());
-                        player.message("LUK added.");
-                    }
-                }
                 break;
             case "uptime":
                 long milliseconds = System.currentTimeMillis() - Server.uptime;
@@ -392,7 +353,7 @@ public class Commands {
                 int hours = (int) ((milliseconds / (1000 * 60 * 60)) % 24);
                 int days = (int) ((milliseconds / (1000 * 60 * 60 * 24)));
                 player.yellowMessage("Asteria has been online for " + days + " days " + hours + " hours " + minutes + " minutes and " + seconds + " seconds.");
-                break;
+                break;    
             case "gacha":
                 if (player.gmLevel() == 0) { // Sigh, need it for now...
                     player.yellowMessage("Player Command " + heading + sub[0] + " does not exist, see @help for a list of commands.");
@@ -496,11 +457,32 @@ public class Commands {
                 }
                 c.announce(MaplePacketCreator.getNPCTalk(9010000, (byte) 0, output, "00 00", (byte) 0));
                 break;
-            case "dispose":
-                NPCScriptManager.getInstance().dispose(c);
-                c.announce(MaplePacketCreator.enableActions());
-                c.removeClickedNPC();
-                player.message("You've been disposed.");
+            case "str":
+            case "int":
+            case "luk":
+            case "dex":
+                int amount = Integer.parseInt(sub[1]);
+                if (amount > 0 && amount <= player.getRemainingAp() && amount < 31997) {
+                    if (sub[0].equals("str") && amount + player.getStr() < 32001) {
+                        player.setStr(player.getStr() + amount);
+                        player.updateSingleStat(MapleStat.STR, player.getStr());
+                    } else if (sub[0].equals("int") && amount + player.getInt() < 32001) {
+                        player.setInt(player.getInt() + amount);
+                        player.updateSingleStat(MapleStat.INT, player.getInt());
+                    } else if (sub[0].equals("luk") && amount + player.getLuk() < 32001) {
+                        player.setLuk(player.getLuk() + amount);
+                        player.updateSingleStat(MapleStat.LUK, player.getLuk());
+                    } else if (sub[0].equals("dex") && amount + player.getDex() < 32001) {
+                        player.setDex(player.getDex() + amount);
+                        player.updateSingleStat(MapleStat.DEX, player.getDex());
+                    } else {
+                        player.message("Make sure the stat you are trying to raise will not be over 32000.");
+                    }
+                    player.setRemainingAp(player.getRemainingAp() - amount);
+                    player.updateSingleStat(MapleStat.AVAILABLEAP, player.getRemainingAp());
+                } else {
+                    player.message("Please make sure your AP is not over 32000 and you have enough to distribute.");
+                }
                 break;
             case "rates":
                 c.resetVoteTime();
@@ -623,16 +605,12 @@ public class Commands {
                 }
                 break;
             case "bosshp":
-                for (MapleMonster monster : player.getMap().getMonsters()) {
-                    if (monster != null && monster.isBoss() && monster.getHp() > 0) {
-                        long percent = monster.getHp() * 100L / monster.getMaxHp();
-                        String bar = "[";
-                        for (int i = 0; i < 100; i++) {
-                            bar += i < percent ? "|" : ".";
-                        }
-                        bar += "]";
-                        player.yellowMessage(monster.getName() + " has " + percent + "% HP left.");
-                        player.yellowMessage("HP: " + bar);
+                List<MapleMapObject> mobs = c.getPlayer().getMap().getMapObjectsInRange(new Point(0,0), Double.
+                        POSITIVE_INFINITY, Arrays.asList(MapleMapObjectType.MONSTER));
+                for (MapleMapObject mob : mobs) {
+                    MapleMonster m = (MapleMonster) mob;
+                    if (m.isBoss()) {
+                        player.dropMessage("Boss: " + m.getName() + " | HP: " + m.getHp() + "/" + m.getMaxHp() + "");
                     }
                 }
                 break;
@@ -659,14 +637,14 @@ public class Commands {
                     } catch (SQLException e) {
                     }
                 }
-                break;
-            default:
-                if (player.gmLevel() == 0) {
-                    player.yellowMessage("Player Command " + heading + sub[0] + " does not exist, see @help for a list of commands.");
-                }
+                break;    
+                default:
+                    if (player.gmLevel() == 0) {
+                        player.yellowMessage("Player Command " + heading + sub[0] + " does not exist, see @help for a list of commands.");
+                    }
                 return false;
         }
-        return true;
+       return true;
     }
 
     public static boolean executeGMCommand(MapleClient c, String[] sub, char heading) {
