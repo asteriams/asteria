@@ -329,7 +329,8 @@ public class Commands {
                 player.message("@whatdropsfrom <monster name>: Displays a list of drops and chances for a specified monster.");
                 player.message("@whodrops <item name>: Displays monsters that drop an item given an item name.");
                 player.message("@bosshp: Displays the remaining HP of the bosses on your map.");
-                player.message("@str/dex/int/luk [amount]: adds AP into any stat");
+                player.message("@str/dex/int/luk [amount]: adds AP into any stat.");
+                player.message("@save: Saves your data.");
                 break;
             case "dispose":
                 NPCScriptManager.getInstance().dispose(c);
